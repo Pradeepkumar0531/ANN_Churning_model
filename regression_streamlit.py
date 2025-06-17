@@ -6,7 +6,7 @@ import pandas as pd
 import pickle
 
 # Loading the trained model
-model=tf.keras.models.load_model('regression_model.keras', compile=False)
+model=tf.keras.models.load_model('regression_model.keras', compile=True)
 
 # Loading the Encoders and scaling
 with open('label_encoder_gender.pkl','rb') as file:
@@ -27,11 +27,11 @@ Gender = st.selectbox('Gender',label_encoder_gender.classes_)
 Age = st.slider('Age',18,92)
 Balance = st.number_input('Balance')
 Credit_score = st.number_input('Credit Score')
-Exited = st.selectbox('Exited',[0,1])
 Tenure = st.slider('Tenure',0,10)
 Number_of_products = st.slider('Number of Products',1,4)
 Has_credit_card = st.selectbox('Has Credit Card',[0,1])
 Is_activer_mentor = st.selectbox('Is Active Member',[0,1])
+Exited = st.selectbox('Exited',[0,1])
 
 # Preparing the input data
 input_data={
@@ -54,11 +54,16 @@ input_data=pd.DataFrame(input_data)
 # Combining ohe columns into main dataframe
 input_data = pd.concat([input_data.reset_index(drop=True),geo_encoded_df],axis=1)
 
-# Scale the input data
-input_scaled = scaler.transform(input_data)
+# Predict on button click
+if st.button("Predict Salary"):
+    expected_columns = [
+        'CreditScore', 'Gender', 'Age', 'Tenure', 'Balance',
+        'NumOfProducts', 'HasCrCard', 'IsActiveMember', 'Exited',
+        'Geography_France', 'Geography_Germany', 'Geography_Spain'
+    ]
+    input_data = input_data[expected_columns]  # Ensure correct column order
 
-# Prediction
-prediction=model.predict(input_scaled)
-prediction_salary=prediction[0][0]
-
-st.write(f'Predicted Estimated Salary : {prediction_salary:.2f}')
+    input_scaled = scaler.transform(input_data)
+    prediction = model.predict(input_scaled)
+    prediction_salary = prediction[0][0]
+    st.success(f'Predicted Estimated Salary: ₹ {prediction_salary:,.2f}')
